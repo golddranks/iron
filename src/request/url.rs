@@ -60,13 +60,28 @@ impl Url {
     ///
     /// See: http://url.spec.whatwg.org/#relative-scheme
     pub fn parse(input: &str) -> Result<Url, String> {
-        // Parse the string using rust-url, then convert.
         match url::Url::parse(input) {
             Ok(raw_url) => Url::from_generic_url(raw_url),
             Err(e) => Err(format!("{}", e))
         }
     }
-
+    /// Create a URL from a string.
+    ///
+    /// The input must be a valid URL in a relative scheme for this to succeed.
+    ///
+    /// HTTP and HTTPS are relative schemes.
+    ///
+    /// See: http://url.spec.whatwg.org/#relative-scheme
+    pub fn parse_rel(base: &str, input: &str) -> Result<Url, String> {
+        // Parse the string using rust-url, then convert.
+        let base_url = url::Url::parse(base).unwrap();
+        let mut parser = url::UrlParser::new();
+        parser.base_url(&base_url);
+        match parser.parse(input) {
+            Ok(raw_url) => Url::from_generic_url(raw_url),
+            Err(e) => Err(format!("{}", e))
+        }
+    }
     /// Create a `Url` from a `rust-url` `Url`.
     pub fn from_generic_url(raw_url: url::Url) -> Result<Url, String> {
         // Create an Iron URL by extracting the relative scheme data.
